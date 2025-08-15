@@ -1,0 +1,97 @@
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  mcp-api:
+    build:
+      context: .
+      dockerfile: mcp/Dockerfile
+    container_name: product-mcp-api
+    environment:
+      # Use Postgres in compose; fallback to sqlite inside Dockerfile if not set
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/products
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  chat-api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: product-chat-api
+    environment:
+      - OLLAMA_SERVER_URL=http://ollama:11434
+      - MCP_SERVER_URL=http://mcp-api:9000
+      - USE_FAST_FALLBACK=false
+      - NLP_MODEL_NAME=qwen2.5:3b-instruct-q4_K_M
+      - NLP_TIMEOUT=120.0
+      - NLP_TEMPERATURE=0.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api
+    depends_on:
+      - mcp-api
+      - ollama
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ollama:
+    build:
+      context: .
+      dockerfile: ollama/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:15-alpine
+    container_name: product-mcp-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=products
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:
+  ollama_models:
+

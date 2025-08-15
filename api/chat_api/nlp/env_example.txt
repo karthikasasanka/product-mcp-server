@@ -1,0 +1,21 @@
+# NLP Model Configuration
+# Copy these variables to your .env file and modify as needed
+
+# Model Selection
+# Options: "llama3.1:8b", "qwen2.5:3b-instruct-q4_K_M", or any other Ollama model
+NLP_MODEL_NAME=llama3.1:8b
+
+# Timeout in seconds
+# - llama3.1:8b: 300.0 (5 minutes) - slow but very intelligent
+# - qwen2.5:3b: 120.0 (2 minutes) - faster, good balance
+NLP_TIMEOUT=300.0
+
+# Model temperature (0.0 = deterministic, higher = more creative)
+NLP_TEMPERATURE=0.0
+
+# Other settings
+MCP_SERVER_URL=http://localhost:9000
+OLLAMA_SERVER_URL=http://localhost:11434
+USE_FAST_FALLBACK=true
+
+
